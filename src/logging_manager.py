@@ -71,6 +71,7 @@ class LoggingManager:
         
         # System monitoring
         self.process = psutil.Process()
+        self._stop_event = threading.Event()
         self.system_monitor = threading.Thread(target=self._monitor_system_resources, daemon=True)
         self.system_monitor.start()
         
@@ -119,7 +120,7 @@ class LoggingManager:
         
     def _monitor_system_resources(self):
         """Background thread to monitor system resources"""
-        while True:
+        while not self._stop_event.is_set():
             try:
                 memory_info = self.process.memory_info()
                 cpu_percent = self.process.cpu_percent()
@@ -134,11 +135,11 @@ class LoggingManager:
                 if len(self.operation_stats['cpu_peaks']) > 100:
                     self.operation_stats['cpu_peaks'].pop(0)
                 
-                time.sleep(1)  # Monitor every second
+                self._stop_event.wait(1)  # Monitor every second
                 
             except Exception as e:
                 self.logger.error(f"Error in system monitoring: {e}")
-                time.sleep(5)  # Wait longer on error
+                self._stop_event.wait(5)  # Wait longer on error
                 
     def _process_metrics(self):
         """Background thread to process and log metrics"""
@@ -291,8 +292,11 @@ class LoggingManager:
     def cleanup(self):
         """Cleanup resources and generate final report"""
         # Stop monitoring threads
+        self._stop_event.set()
         self.metrics_queue.put(None)
+        
         self.metrics_thread.join()
+        self.system_monitor.join()
         
         # Generate final performance report
         performance_summary = self.get_performance_summary()

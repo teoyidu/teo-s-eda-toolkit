@@ -355,12 +355,12 @@ class TurkishBoilerplateCleanerProcessor:
                                 
                         if filtered_words:
                             processed_sentences.append(' '.join(filtered_words))
-                    except:
+                    except Exception:
                         # Fallback to simple processing
                         processed_sentences.append(sentence)
                         
                 text = ' '.join(processed_sentences)
-            except:
+            except Exception:
                 # Fallback to original text if tokenization fails
                 pass
                 
