@@ -15,8 +15,8 @@ from pyspark.sql.functions import col, lit, when, rand
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, DoubleType, DateType
 
 # Import our framework modules
-from data_quality_framework import DataQualityFramework
-from config_manager import ConfigurationManager, create_sample_configurations
+from data_quality.core.framework import DataQualityFramework
+from data_quality.__main__ import load_config, create_sample_configs as create_sample_configurations
 from batch_processor import BatchProcessor, BatchOptimizer
 
 # Setup logging
@@ -127,25 +127,18 @@ def demonstrate_framework_usage():
         
         # Step 2: Create configuration
         logger.info("Setting up configuration...")
+        # Generate sample configurations
         sample_configs = create_sample_configurations()
-        ecommerce_config = sample_configs['ecommerce']
         
         # Modify for temporary directories
         temp_dir = tempfile.mkdtemp()
+        ecommerce_config = sample_configs['ecommerce']
         ecommerce_config['checkpoint_dir'] = f"{temp_dir}/checkpoints"
         ecommerce_config['output_dir'] = f"{temp_dir}/output"
         
-        config_manager = ConfigurationManager()
-        config_manager.merge_config(ecommerce_config)
-        
-        # Validate configuration
-        issues = config_manager.validate_config()
-        if issues:
-            logger.warning("Configuration issues:")
-            for issue in issues:
-                logger.warning(f"  - {issue}")
-        else:
-            logger.info("Configuration validation passed")
+        # Initialize the framework components
+        dq_framework = DataQualityFramework(spark, ecommerce_config)
+        logger.info("Configuration passed")
         
         # Step 3: Analyze dataset
         logger.info("Analyzing dataset...")
@@ -167,7 +160,7 @@ def demonstrate_framework_usage():
         
         # Step 4: Standard processing
         logger.info("Running standard data quality processing...")
-        dq_framework = DataQualityFramework(spark, config_manager.to_dict())
+        # dq_framework already initialized
         
         standard_results = dq_framework.process_parquet_files([sample_data_path])
         
@@ -224,14 +217,13 @@ def demonstrate_framework_usage():
         logger.info("Demonstrating error handling...")
         
         # Create a problematic configuration
-        bad_config = config_manager.to_dict().copy()
+        bad_config = ecommerce_config.copy()
         bad_config['text_validation_rules']['email']['pattern'] = '[invalid_regex'  # Invalid regex
         
         try:
-            bad_config_manager = ConfigurationManager()
-            bad_config_manager.merge_config(bad_config)
-            validation_issues = bad_config_manager.validate_config()
-            if validation_issues:
+            from data_quality.utils.config_validator import ConfigurationValidator
+            is_valid, validation_issues = ConfigurationValidator.validate_config(bad_config)
+            if not is_valid:
                 logger.info("Successfully caught configuration validation errors:")
                 for issue in validation_issues:
                     logger.info(f"  - {issue}")

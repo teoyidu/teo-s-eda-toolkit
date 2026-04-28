@@ -12,13 +12,12 @@ from pathlib import Path
 from pyspark.sql import SparkSession, DataFrame
 import pandas as pd
 
-from .exceptions import ConfigurationError, ProcessingError
+from ..exceptions import ConfigurationError, ProcessingError, ValidationError, ModelLoadError, InferenceError
 from ..processors import get_processor
 from ..processors.xlsx_processor import XLSXProcessor
 from ..utils.metrics import MetricsCollector
 from ..utils.config_validator import ConfigurationValidator
 from ..utils.legal_domain_filter import LegalDomainFilter
-from ..exceptions import ValidationError, ModelLoadError, InferenceError
 
 logger = logging.getLogger(__name__)
 

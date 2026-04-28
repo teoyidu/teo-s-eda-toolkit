@@ -17,8 +17,10 @@ import psutil
 logger = logging.getLogger(__name__)
 
 # Import our custom modules
-from data_quality_framework import DataQualityFramework
-from config_manager import ConfigurationManager, create_sample_configurations
+from data_quality.core.framework import DataQualityFramework
+from data_quality.__main__ import create_sample_configs as create_sample_configurations
+from data_quality.utils.config_validator import ConfigurationValidator
+import json
 from batch_processor import BatchProcessor, BatchOptimizer
 
 from pyspark.sql import SparkSession
@@ -182,25 +184,30 @@ def run_data_quality_pipeline(input_paths: List[str],
         # Load configuration
         logger.info("Loading configuration...")
         if config_path:
-            config_manager = ConfigurationManager(config_path)
+            with open(config_path, 'r') as f:
+                config_dict = json.load(f)
         else:
-            logger.info("No config file provided, using sample configuration")
-            config_manager = ConfigurationManager()
-            sample_config = create_sample_configurations()
-            config_manager._update_config_from_dict(sample_config)
+            logger.info("No config file provided, using default configuration")
+            config_dict = {
+                'checkpoint_dir': '/tmp/dq_checkpoints',
+                'output_dir': '/tmp/dq_output',
+                'batch_size': 1000000
+            }
         
-        # Override output directory if provided
         if output_dir:
-            config_manager.config.output_dir = output_dir
-        
-        # Validate configuration
-        config_issues = config_manager.validate_config()
-        if config_issues:
+            config_dict['output_dir'] = output_dir
+            
+        is_valid, config_issues = ConfigurationValidator.validate_config(config_dict)
+        if not is_valid:
             logger.warning("Configuration validation issues found:")
             for issue in config_issues:
                 logger.warning(f"  - {issue}")
-        
-        config_dict = config_manager.to_dict()
+                
+        # Mock for later use
+        class DummyConfig:
+            def get_validation_summary(self):
+                return {"is_valid": is_valid, "errors": config_issues}
+        config_manager = DummyConfig()
         
         # Validate input paths
         logger.info("Validating input paths...")

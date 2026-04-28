@@ -541,8 +541,8 @@ python main.py /path/to/small_dataset.parquet \
 ### Custom Processing Function
 
 ```python
-from data_quality_framework import DataQualityFramework
-from config_manager import ConfigurationManager
+from data_quality.core.framework import DataQualityFramework
+from data_quality.__main__ import load_config
 from pyspark.sql import SparkSession
 
 # Initialize Spark session
