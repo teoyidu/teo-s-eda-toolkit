@@ -6,7 +6,7 @@ A comprehensive data validation and cleansing pipeline for PySpark DataFrames.
 
 # Import core components
 from .core.framework import DataQualityFramework
-from .core.exceptions import (
+from .exceptions import (
     DataQualityError,
     ConfigurationError,
     ValidationError,

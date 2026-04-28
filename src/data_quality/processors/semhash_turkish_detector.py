@@ -295,8 +295,11 @@ class SemHashTurkishDetector:
                 
                 # Check if this text is in the selected records
                 if preprocessed_text not in selected_texts:
-                    df.at[idx, 'is_duplicate'] = True
-                    df.at[idx, 'duplicate_group'] = 0  # All removed items in group 0
+                    df.loc[idx, 'is_duplicate'] = True
+                    df.loc[idx, 'duplicate_group'] = 0  # All removed items in group 0
+                else:
+                    df.loc[idx, 'is_duplicate'] = False
+                    df.loc[idx, 'duplicate_group'] = 0
             
             duplicate_count = df['is_duplicate'].sum()
             logger.info(f"SemHash marked {duplicate_count} texts as duplicates out of {len(df)} total")

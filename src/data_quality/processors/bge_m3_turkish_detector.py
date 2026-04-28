@@ -406,11 +406,11 @@ class BGEM3TurkishDetector:
             # Keep the first item, mark others as duplicates
             for i, idx in enumerate(group):
                 if i == 0:  # First item in group (representative)
-                    df.iloc[idx]['is_duplicate'] = False
-                    df.iloc[idx]['duplicate_group'] = group_id
+                    df.loc[df.index[idx], 'is_duplicate'] = False
+                    df.loc[df.index[idx], 'duplicate_group'] = group_id
                 else:  # Duplicates
-                    df.iloc[idx]['is_duplicate'] = True
-                    df.iloc[idx]['duplicate_group'] = group_id
+                    df.loc[df.index[idx], 'is_duplicate'] = True
+                    df.loc[df.index[idx], 'duplicate_group'] = group_id
                     
         duplicate_count = df['is_duplicate'].sum()
         logger.info(f"BGE-M3 marked {duplicate_count} texts as duplicates out of {len(df)} total")

@@ -1,5 +1,6 @@
 import pytest
 from pyspark.sql import SparkSession
+import pandas as pd
 
 @pytest.fixture(scope="session")
 def spark():
@@ -14,3 +15,12 @@ def spark():
     )
     yield spark
     spark.stop()
+
+@pytest.fixture
+def sample_df():
+    """Create a basic pandas DataFrame for testing."""
+    return pd.DataFrame({
+        'id': [1, 2, 3, 4],
+        'text': ['hello', 'world', 'hello', 'test'],
+        'value': [10.5, 20.0, None, 15.5]
+    })

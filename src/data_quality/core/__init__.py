@@ -3,7 +3,7 @@ Core module for the Data Quality Framework
 """
 
 from .framework import DataQualityFramework
-from .exceptions import (
+from ..exceptions import (
     DataQualityError,
     ConfigurationError,
     ValidationError,

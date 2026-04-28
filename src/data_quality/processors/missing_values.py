@@ -7,7 +7,7 @@ from typing import Dict, Tuple
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, isnan, isnull
 
-from ..core.exceptions import ValidationError
+from ..exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,13 @@ class MissingValuesProcessor:
             total_rows = df.count()
             
             for column in df.columns:
-                missing_count = df.filter(col(column).isNull() | isnan(col(column))).count()
+                # Check if column is numeric before applying isnan
+                col_type = dict(df.dtypes)[column]
+                if col_type in ('double', 'float', 'int', 'bigint', 'smallint', 'tinyint', 'decimal'):
+                    condition = col(column).isNull() | isnan(col(column))
+                else:
+                    condition = col(column).isNull()
+                missing_count = df.filter(condition).count()
                 missing_percentage = (missing_count / total_rows) * 100 if total_rows > 0 else 0
                 
                 stats[column] = {

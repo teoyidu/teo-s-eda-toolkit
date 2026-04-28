@@ -28,4 +28,8 @@ class ModelLoadError(LegalDomainError):
 
 class InferenceError(LegalDomainError):
     """Exception raised when model inference fails"""
+    pass
+
+class ExternalValidationError(DataQualityError):
+    """Exception raised when external validation fails"""
     pass 
