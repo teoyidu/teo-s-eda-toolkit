@@ -15,30 +15,14 @@ import pandas as pd
 from ..exceptions import ConfigurationError, ProcessingError, ValidationError, ModelLoadError, InferenceError
 from ..processors import get_processor
 from ..processors.xlsx_processor import XLSXProcessor
+from .pipeline import PipelineBuilder
 from ..utils.metrics import MetricsCollector
 from ..utils.config_validator import ConfigurationValidator
 from ..utils.legal_domain_filter import LegalDomainFilter
 
 logger = logging.getLogger(__name__)
 
-def get_processor_registry(config):
-    """
-    Dynamically import and instantiate all processors, including TurkishDuplicateDetector.
-    This avoids circular imports by only importing when needed.
-    """
-    return {
-        'missing_values': get_processor('MissingValuesProcessor')(config),
-        'mandatory_fields': get_processor('MandatoryFieldsProcessor')(config),
-        'numerical_formats': get_processor('NumericalFormatsProcessor')(config),
-        'outdated_data': get_processor('OutdatedDataProcessor')(config),
-        'external_validation': get_processor('ExternalValidationProcessor')(config),
-        'uniqueness': get_processor('UniquenessProcessor')(config),
-        'categories': get_processor('CategoriesProcessor')(config),
-        'text_validation': get_processor('TextValidationProcessor')(config),
-        'relationships': get_processor('RelationshipsProcessor')(config),
-        'entry_rules': get_processor('EntryRulesProcessor')(config),
-        'turkish_duplicate_detector': get_processor('TurkishDuplicateDetector')(config)
-    }
+
 
 class DataQualityFramework:
     """
@@ -69,8 +53,8 @@ class DataQualityFramework:
         self.validation_results = {}
         self.metrics = MetricsCollector()
         
-        # Initialize processors using the helper function
-        self.processors = get_processor_registry(config)
+        # Initialize processors using the PipelineBuilder
+        self.pipeline = PipelineBuilder(config).add_default_processors().build()
         
         self.xlsx_processor = XLSXProcessor(config)
         
@@ -260,23 +244,11 @@ class DataQualityFramework:
     
     def _apply_data_quality_pipeline(self, df: DataFrame, file_path: str) -> Tuple[DataFrame, Dict]:
         """Apply all data quality checks in sequence"""
-        validation_stats = {}
         current_df = df
         
         try:
-            # Apply each processor in sequence
-            for processor_name, processor in self.processors.items():
-                logger.info(f"Applying {processor_name} processor")
-                start_time = self.metrics.start_timer(processor_name)
-                
-                current_df, stats = processor.process(current_df)
-                
-                self.metrics.end_timer(processor_name, start_time)
-                self.metrics.record_memory_usage(processor_name)
-                self.metrics.record_record_count(processor_name, current_df.count())
-                self.metrics.record_validation_stats(processor_name, stats)
-                
-                validation_stats[processor_name] = stats
+            # Execute the pipeline with metrics collection
+            current_df, validation_stats = self.pipeline.execute(current_df, metrics=self.metrics)
             
             # Cache the final result for better performance
             current_df.cache()

@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for cleaning Hadoop-specific tags and metadata from text data
 """
@@ -12,7 +13,7 @@ import xml.etree.ElementTree as ET
 
 logger = logging.getLogger(__name__)
 
-class HadoopCleanerProcessor:
+class HadoopCleanerProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the processor

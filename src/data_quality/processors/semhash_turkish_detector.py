@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 SemHash-based Turkish duplicate detector with semantic deduplication capabilities
 """
@@ -56,14 +57,14 @@ def _load_stopwords_from_file(filepath: str) -> Optional[Set[str]]:
     return stopwords_set if stopwords_set else None
 
 @dataclass
-class DeduplicationResult:
+class DeduplicationResult(BaseProcessor):
     """Result of deduplication process"""
     selected_records: List[Dict[str, Any]]
     removed_records: List[Dict[str, Any]]
     duplicate_groups: List[List[int]]
     statistics: Dict[str, Any]
 
-class SemHashTurkishDetector:
+class SemHashTurkishDetector(BaseProcessor):
     """
     Turkish-friendly duplicate detector using SemHash for semantic deduplication
     """

@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for detecting and handling noise in text data, particularly from OCR sources
 """
@@ -10,7 +11,7 @@ from collections import Counter
 
 logger = logging.getLogger(__name__)
 
-class NoiseDetectionProcessor:
+class NoiseDetectionProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the processor

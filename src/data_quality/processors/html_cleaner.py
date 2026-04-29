@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for cleaning HTML tags from text data
 """
@@ -11,7 +12,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
-class HTMLCleanerProcessor:
+class HTMLCleanerProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the processor

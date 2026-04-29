@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for handling mandatory fields validation
 """
@@ -8,7 +9,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-class MandatoryFieldsProcessor:
+class MandatoryFieldsProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the processor

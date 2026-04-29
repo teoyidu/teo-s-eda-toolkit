@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for external data validation
 """
@@ -8,7 +9,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-class ExternalValidationProcessor:
+class ExternalValidationProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the processor

@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for handling missing values in data
 """
@@ -11,7 +12,7 @@ from ..exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
-class MissingValuesProcessor:
+class MissingValuesProcessor(BaseProcessor):
     """Processor for handling missing values in data"""
     
     def __init__(self, config: Dict):

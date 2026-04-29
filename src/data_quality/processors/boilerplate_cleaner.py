@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Enhanced processor for cleaning boilerplate text from Turkish legal data
 """
@@ -95,7 +96,7 @@ def _load_turkish_stopwords() -> Set[str]:
     logger.warning("Using fallback Turkish stopwords list")
     return fallback
 
-class TurkishBoilerplateCleanerProcessor:
+class TurkishBoilerplateCleanerProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the enhanced Turkish boilerplate cleaner

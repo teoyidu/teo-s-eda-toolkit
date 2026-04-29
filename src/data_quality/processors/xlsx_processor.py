@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 XLSX file processor for data quality framework
 """
@@ -11,7 +12,7 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-class XLSXProcessor:
+class XLSXProcessor(BaseProcessor):
     def __init__(self, config: Dict):
         """
         Initialize XLSX processor with configuration

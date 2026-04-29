@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for text data validation
 """
@@ -9,7 +10,7 @@ import re
 
 logger = logging.getLogger(__name__)
 
-class TextValidationProcessor:
+class TextValidationProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the processor

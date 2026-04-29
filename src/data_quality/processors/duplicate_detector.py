@@ -1,3 +1,4 @@
+from ..core.base_processor import BaseProcessor
 """
 Processor for detecting duplicate and near-duplicate content using MinHash/SimHash
 with Turkish language support
@@ -28,7 +29,7 @@ except LookupError:
 
 logger = logging.getLogger(__name__)
 
-class TurkishDuplicateDetector:
+class TurkishDuplicateDetector(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
         """
         Initialize the Turkish-friendly duplicate detector
