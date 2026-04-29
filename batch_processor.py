@@ -18,7 +18,7 @@ from pyspark.sql.functions import col, spark_partition_id, monotonically_increas
 from pyspark.storagelevel import StorageLevel
 
 from data_quality.exceptions import DataQualityError, ProcessingError
-from src.logging_manager import LoggingManager
+from logging_manager import LoggingManager
 
 class BatchProcessingError(DataQualityError):
     """Raised when batch processing fails"""
