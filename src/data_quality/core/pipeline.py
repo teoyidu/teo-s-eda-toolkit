@@ -28,6 +28,10 @@ class DataQualityPipeline:
         current_df = df
         validation_stats = {}
         
+        current_count = None
+        if metrics:
+            current_count = current_df.count()
+        
         for name, processor in self.processors:
             logger.info(f"Executing processor: {name}")
             
@@ -40,7 +44,13 @@ class DataQualityPipeline:
             if metrics:
                 metrics.end_timer(name, start_time)
                 metrics.record_memory_usage(name)
-                metrics.record_record_count(name, current_df.count())
+                
+                # Use stats to track counts without triggering Spark Action
+                rows_dropped = stats.get('rows_dropped', 0)
+                if current_count is not None:
+                    current_count = max(0, current_count - rows_dropped)
+                    metrics.record_record_count(name, current_count)
+                    
                 metrics.record_validation_stats(name, stats)
                 
             validation_stats[name] = stats

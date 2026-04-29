@@ -1,13 +1,11 @@
 from ..core.base_processor import BaseProcessor
-"""
-Processor for cleaning Hadoop-specific tags and metadata from text data
-"""
-
 import logging
-from typing import List, Dict, Any, Set, Optional
+from typing import List, Dict, Any, Set, Optional, Tuple
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import col, pandas_udf, regexp_extract, to_date, to_timestamp, regexp_replace
+from pyspark.sql.types import StringType
 import pandas as pd
 import re
-from datetime import datetime
 import json
 import xml.etree.ElementTree as ET
 
@@ -15,15 +13,8 @@ logger = logging.getLogger(__name__)
 
 class HadoopCleanerProcessor(BaseProcessor):
     def __init__(self, config: Dict[str, Any]):
-        """
-        Initialize the processor
-        
-        Args:
-            config (Dict[str, Any]): Configuration dictionary
-        """
-        self.config = config
+        super().__init__(config)
         self.hadoop_columns = config.get('hadoop_columns', {})
-        # Common Hadoop metadata patterns (with capture groups)
         self.metadata_patterns = {
             'job_id': r'(job_\d+_\d+)',
             'task_id': r'(task_\d+_\d+_\d+)',
@@ -34,108 +25,105 @@ class HadoopCleanerProcessor(BaseProcessor):
             'stage_id': r'(stage_\d+)',
             'partition_id': r'(partition_\d+)'
         }
-        # For generic XML tag removal
         self.xml_tag_pattern = r'<[^>]+>'
         
-    def process(self, df: pd.DataFrame) -> pd.DataFrame:
+    def process(self, df: DataFrame) -> Tuple[DataFrame, Dict[str, Any]]:
         """
-        Process the DataFrame to clean Hadoop tags
+        Process the PySpark DataFrame to clean Hadoop tags
         
         Args:
-            df (pd.DataFrame): Input DataFrame
+            df (DataFrame): Input DataFrame
             
         Returns:
-            pd.DataFrame: Processed DataFrame
+            Tuple[DataFrame, Dict[str, Any]]: Processed DataFrame and stats
         """
         if not self.hadoop_columns:
-            return df
+            return df, {}
+            
+        stats = {}
         
-        # Create a copy once for all metadata extraction
-        original_df = df.copy(deep=True)
-        
-        # Extract metadata first for all columns that need it
         for column, settings in self.hadoop_columns.items():
             if column not in df.columns:
                 continue
-            
+                
             if settings.get('extract_metadata', False):
-                df = self._extract_metadata(df, column, settings, original_df=original_df)
-        
-        # Then clean tags for all columns
-        for column, settings in self.hadoop_columns.items():
-            if column not in df.columns:
-                continue
-            
-            # Convert to string and clean tags
-            df[column] = df[column].astype(str)
+                df = self._extract_metadata(df, column, settings)
+                
             df = self._clean_hadoop_tags(df, column, settings)
+            stats[column] = {"processed": True}
+            
+        return df, stats
+
+    def _extract_metadata(self, df: DataFrame, column: str, settings: Dict[str, Any]) -> DataFrame:
+        metadata_fields = settings.get('metadata_fields', list(self.metadata_patterns.keys()))
+        for field in metadata_fields:
+            if field in self.metadata_patterns:
+                pattern = self.metadata_patterns[field]
+                new_column = f"{column}_{field}"
+                
+                # Extract the 1st capture group
+                df = df.withColumn(new_column, regexp_extract(col(column), pattern, 1))
+                
+                if 'metadata_transformations' in settings and field in settings['metadata_transformations']:
+                    transform = settings['metadata_transformations'][field]
+                    if transform.get('type') == 'datetime':
+                        fmt = transform.get('format')
+                        df = df.withColumn(new_column, to_timestamp(col(new_column), fmt))
+                    elif transform.get('type') == 'numeric':
+                        df = df.withColumn(new_column, col(new_column).cast("double"))
         return df
-    
-    def _extract_value_tags(self, text: str) -> str:
-        """Extract only the values inside <value> tags. If none, return all text content."""
-        try:
-            # Try to parse as XML
-            root = ET.fromstring(f'<root>{text}</root>')
-            values = [elem.text for elem in root.iter('value') if elem.text]
-            if values:
-                return ' '.join(values)
-            # If no <value> tags, return all text content (concatenated)
-            all_text = ''.join(root.itertext()).strip()
-            return all_text
-        except Exception:
-            # If not XML, fallback to removing tags
-            return re.sub(self.xml_tag_pattern, '', text)
-    
-    def _clean_hadoop_tags(self, df: pd.DataFrame, column: str, settings: Dict[str, Any]) -> pd.DataFrame:
-        """Clean Hadoop-specific tags from text data, preserving only <value> tag content if present."""
-        def clean_text(text):
-            try:
-                cleaned_text = text
-                # Extract only <value> tag content if present, else all text
-                cleaned_text = self._extract_value_tags(cleaned_text)
-                # Remove custom patterns if specified
-                patterns = settings.get('custom_patterns', [])
-                for pattern in patterns:
-                    cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.DOTALL)
-                # Remove Hadoop-specific metadata if specified
-                if settings.get('remove_metadata', True):
-                    for pattern in self.metadata_patterns.values():
-                        cleaned_text = re.sub(pattern, '', cleaned_text)
-                # Preserve structured data if specified
-                if settings.get('preserve_structured_data', False):
-                    try:
-                        if cleaned_text.strip().startswith('{') or cleaned_text.strip().startswith('['):
-                            data = json.loads(cleaned_text)
-                            if 'preserve_fields' in settings:
-                                data = {k: v for k, v in data.items() if k in settings['preserve_fields']}
-                            cleaned_text = json.dumps(data)
-                    except json.JSONDecodeError:
-                        pass
-                # Remove extra whitespace
-                cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-                return cleaned_text
-            except Exception as e:
-                logger.warning(f"Error cleaning Hadoop tags in column {column}: {str(e)}")
-                return text
-        df[column] = df[column].apply(clean_text)
+
+    def _clean_hadoop_tags(self, df: DataFrame, column: str, settings: Dict[str, Any]) -> DataFrame:
+        # Wrap the python logic in a Pandas UDF for execution across partition batches
+        
+        metadata_patterns_vals = list(self.metadata_patterns.values()) if settings.get('remove_metadata', True) else []
+        custom_patterns = settings.get('custom_patterns', [])
+        preserve_structured_data = settings.get('preserve_structured_data', False)
+        preserve_fields = settings.get('preserve_fields', [])
+        xml_tag_pattern = self.xml_tag_pattern
+        
+        @pandas_udf(StringType())
+        def clean_tags_udf(series: pd.Series) -> pd.Series:
+            def extract_value_tags(text: str) -> str:
+                if not text or pd.isna(text):
+                    return ""
+                try:
+                    root = ET.fromstring(f'<root>{text}</root>')
+                    values = [elem.text for elem in root.iter('value') if elem.text]
+                    if values:
+                        return ' '.join(values)
+                    return ''.join(root.itertext()).strip()
+                except Exception:
+                    return re.sub(xml_tag_pattern, '', str(text))
+                    
+            def clean_text(text):
+                try:
+                    if not text or pd.isna(text): return ""
+                    cleaned = extract_value_tags(str(text))
+                    
+                    for pattern in custom_patterns:
+                        cleaned = re.sub(pattern, '', cleaned, flags=re.DOTALL)
+                        
+                    for pattern in metadata_patterns_vals:
+                        cleaned = re.sub(pattern, '', cleaned)
+                        
+                    if preserve_structured_data:
+                        try:
+                            t = cleaned.strip()
+                            if t.startswith('{') or t.startswith('['):
+                                data = json.loads(t)
+                                if preserve_fields:
+                                    data = {k: v for k, v in data.items() if k in preserve_fields}
+                                cleaned = json.dumps(data)
+                        except Exception:
+                            pass
+                            
+                    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+                    return cleaned
+                except Exception:
+                    return str(text)
+                    
+            return series.apply(clean_text)
+            
+        df = df.withColumn(column, clean_tags_udf(col(column)))
         return df
-    
-    def _extract_metadata(self, df: pd.DataFrame, column: str, settings: Dict[str, Any], original_df: pd.DataFrame) -> pd.DataFrame:
-        """Extract Hadoop metadata into separate columns"""
-        try:
-            metadata_fields = settings.get('metadata_fields', list(self.metadata_patterns.keys()))
-            for field in metadata_fields:
-                if field in self.metadata_patterns:
-                    pattern = self.metadata_patterns[field]
-                    new_column = f"{column}_{field}"
-                    df[new_column] = original_df[column].str.extract(pattern, expand=False)
-                    if 'metadata_transformations' in settings and field in settings['metadata_transformations']:
-                        transform = settings['metadata_transformations'][field]
-                        if transform.get('type') == 'datetime':
-                            df[new_column] = pd.to_datetime(df[new_column], format=transform.get('format'))
-                        elif transform.get('type') == 'numeric':
-                            df[new_column] = pd.to_numeric(df[new_column], errors='coerce')
-            return df
-        except Exception as e:
-            logger.warning(f"Error extracting metadata from column {column}: {str(e)}")
-            return df 

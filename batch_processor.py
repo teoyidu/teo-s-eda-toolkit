@@ -309,25 +309,17 @@ class BatchProcessor:
         }
 
     def _create_batches(self, df: DataFrame, partition_column: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Create batches from DataFrame"""
+        """Create batches from DataFrame partitions"""
         try:
-            # Get total number of rows
-            total_rows = df.count()
+            num_partitions = df.rdd.getNumPartitions()
             
-            # Calculate number of batches
-            num_batches = max(1, total_rows // self.batch_size)
-            
-            # Create batch definitions
+            # Create batch definitions based on partitions
             batches = []
-            for i in range(num_batches):
-                start_idx = i * self.batch_size
-                end_idx = min((i + 1) * self.batch_size, total_rows)
-                
+            for i in range(num_partitions):
                 batch = {
                     'batch_id': i,
-                    'start_idx': start_idx,
-                    'end_idx': end_idx,
-                    'row_count': end_idx - start_idx
+                    'dataframe': df.filter(spark_partition_id() == i),
+                    'row_count': -1  # Evaluated later
                 }
                 batches.append(batch)
             

@@ -4,8 +4,11 @@ Enhanced processor for cleaning boilerplate text from Turkish legal data
 """
 
 import logging
-from typing import List, Dict, Any, Set, Optional, Tuple, Union
+from typing import List, Dict, Any, Set, Optional, Tuple, Union, Iterator
 import pandas as pd
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import col, pandas_udf
+from pyspark.sql.types import StringType
 import re
 from difflib import SequenceMatcher
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -367,25 +370,26 @@ class TurkishBoilerplateCleanerProcessor(BaseProcessor):
                 
         return text
         
-    def process(self, df: pd.DataFrame) -> pd.DataFrame:
+    def process(self, df: DataFrame) -> Tuple[DataFrame, Dict[str, Any]]:
         """
-        Process the DataFrame to clean Turkish boilerplate text
+        Process the PySpark DataFrame to clean Turkish boilerplate text
         
         Args:
-            df (pd.DataFrame): Input DataFrame
+            df (DataFrame): Input PySpark DataFrame
             
         Returns:
-            pd.DataFrame: Processed DataFrame
+            Tuple[DataFrame, Dict[str, Any]]: Processed DataFrame and stats
         """
         if self.debug_mode:
-            logger.info(f"DEBUG: Processing DataFrame with shape: {df.shape}")
-            logger.info(f"DEBUG: DataFrame columns: {list(df.columns)}")
             logger.info(f"DEBUG: Boilerplate columns config: {self.boilerplate_columns}")
         
         if not self.boilerplate_columns:
             logger.warning("DEBUG: No boilerplate columns configured, returning original DataFrame")
-            return df
+            return df, {}
             
+        stats = {}
+        config = self.config
+        
         for column, settings in self.boilerplate_columns.items():
             if column not in df.columns:
                 logger.warning(f"DEBUG: Column '{column}' not found in DataFrame")
@@ -394,13 +398,19 @@ class TurkishBoilerplateCleanerProcessor(BaseProcessor):
             if self.debug_mode:
                 logger.info(f"DEBUG: Processing column '{column}' with settings: {settings}")
                 
-            # Convert to string type
-            df[column] = df[column].astype(str)
+            @pandas_udf(StringType())
+            def clean_boilerplate_udf(iterator: Iterator[pd.Series]) -> Iterator[pd.Series]:
+                # Initialize models locally in the executor to avoid serializing them from driver
+                processor = TurkishBoilerplateCleanerProcessor(config)
+                for series in iterator:
+                    temp_df = pd.DataFrame({column: series.astype(str)})
+                    processed_df = processor._clean_turkish_boilerplate(temp_df, column, settings)
+                    yield processed_df[column]
             
-            # Apply Turkish boilerplate cleaning
-            df = self._clean_turkish_boilerplate(df, column, settings)
+            df = df.withColumn(column, clean_boilerplate_udf(col(column)))
+            stats[column] = {"processed": True}
             
-        return df
+        return df, stats
         
     def _clean_turkish_boilerplate(self, df: pd.DataFrame, column: str, settings: Dict) -> pd.DataFrame:
         """Clean Turkish boilerplate text from data"""
