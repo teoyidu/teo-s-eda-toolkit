@@ -4,7 +4,7 @@ Processor for handling mandatory fields validation
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Dict, Any
 import pandas as pd
 
 logger = logging.getLogger(__name__)

@@ -1,8 +1,8 @@
 from ..core.base_processor import BaseProcessor
 import logging
-from typing import List, Dict, Any, Set, Optional, Tuple
+from typing import Dict, Any, Tuple
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, pandas_udf, regexp_extract, to_date, to_timestamp, regexp_replace
+from pyspark.sql.functions import col, pandas_udf, regexp_extract, to_timestamp
 from pyspark.sql.types import StringType
 import pandas as pd
 import re

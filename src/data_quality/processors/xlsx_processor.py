@@ -4,11 +4,9 @@ XLSX file processor for data quality framework
 """
 
 import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Union
+from typing import Dict
 import logging
 from pathlib import Path
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

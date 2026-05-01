@@ -4,7 +4,7 @@ Processor for handling outdated data
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Dict, Any
 import pandas as pd
 from datetime import datetime, timedelta
 

@@ -4,7 +4,7 @@ BGE-M3-based Turkish duplicate detector with multilingual semantic deduplication
 """
 
 import logging
-from typing import List, Dict, Any, Set, Tuple, Optional, Union
+from typing import List, Dict, Any, Set, Tuple, Optional
 import pandas as pd
 import numpy as np
 import re

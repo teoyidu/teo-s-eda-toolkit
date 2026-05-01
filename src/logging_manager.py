@@ -3,15 +3,13 @@ import logging.handlers
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from rich.logging import RichHandler
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
 import psutil
 import threading
 from queue import Queue
 import json
-import os
 import gc
 from dataclasses import dataclass, asdict
 from collections import deque

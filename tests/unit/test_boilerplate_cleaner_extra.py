@@ -1,6 +1,4 @@
-import pytest
 import pandas as pd
-from unittest.mock import patch, MagicMock
 from src.data_quality.processors.boilerplate_cleaner import TurkishBoilerplateCleanerProcessor
 
 def test_boilerplate_cleaner_edge_cases():

@@ -6,7 +6,6 @@ SemHash-based Turkish duplicate detector with semantic deduplication capabilitie
 import logging
 from typing import List, Dict, Any, Set, Tuple, Optional
 import pandas as pd
-import numpy as np
 import re
 import unicodedata
 from dataclasses import dataclass

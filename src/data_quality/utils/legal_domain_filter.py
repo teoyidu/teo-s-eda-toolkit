@@ -5,13 +5,12 @@ Uses BERTurk-Legal model to identify legal domain content
 
 import logging
 import os
-from typing import Dict, List, Tuple, Any, Optional, Iterator
+from typing import Dict, Tuple, Any, Iterator
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, pandas_udf
 from pyspark.sql.types import BooleanType, FloatType, StructType, StructField
 import pandas as pd
 
-from ..exceptions import LegalDomainError, ModelLoadError, InferenceError
 
 logger = logging.getLogger(__name__)
 

@@ -31,14 +31,14 @@ def test_turkish_stopwords():
         
         # Test some common Turkish words
         test_words = ['acaba', 'ama', 'aslında', 'az', 'bazı', 'belki', 'biri', 'birkaç', 'birşey', 'biz']
-        print(f"\n🔍 Testing common Turkish words:")
+        print("\n🔍 Testing common Turkish words:")
         for word in test_words:
             is_stopword = word in stopwords
             print(f"  '{word}': {'✅ Stopword' if is_stopword else '❌ Not a stopword'}")
         
         # Test some non-stopwords
         test_non_stopwords = ['mahkeme', 'karar', 'sözleşme', 'taraflar', 'imzalanmıştır']
-        print(f"\n🔍 Testing legal terms (should not be stopwords):")
+        print("\n🔍 Testing legal terms (should not be stopwords):")
         for word in test_non_stopwords:
             is_stopword = word in stopwords
             print(f"  '{word}': {'❌ Stopword (unexpected)' if is_stopword else '✅ Not a stopword (correct)'}")

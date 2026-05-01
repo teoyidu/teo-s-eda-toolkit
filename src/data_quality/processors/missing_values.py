@@ -6,7 +6,7 @@ Processor for handling missing values in data
 import logging
 from typing import Dict, Tuple
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, isnan, isnull, sum, when, count, lit
+from pyspark.sql.functions import col, isnan, sum, when, count, lit
 
 from ..exceptions import ValidationError
 

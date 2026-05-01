@@ -418,8 +418,8 @@ The Turkish NLP features are the most unique part of this toolkit, but have issu
 - [x] Set up MkDocs with API documentation
 - [x] Add `CONTRIBUTING.md` and `CHANGELOG.md`
 - [x] Implement dependency extras (spark, nlp, turkish, viz, dev)
-- [ ] First PyPI release
-- [ ] Add real CI badges
+- [x] First PyPI release
+- [x] Add real CI badges
 
 ### Phase 5: Performance (2-4 weeks)
 - [ ] Build Rust extension for regex-based boilerplate cleaning

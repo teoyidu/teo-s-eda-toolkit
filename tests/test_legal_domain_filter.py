@@ -3,10 +3,8 @@ Tests for the LegalDomainFilter class
 """
 
 import unittest
-import pandas as pd
 from pyspark.sql import SparkSession
 from src.data_quality.utils.legal_domain_filter import LegalDomainFilter
-from src.data_quality.exceptions import ModelLoadError, InferenceError
 
 class TestLegalDomainFilter(unittest.TestCase):
     @classmethod

@@ -4,7 +4,7 @@ Enhanced processor for cleaning boilerplate text from Turkish legal data
 """
 
 import logging
-from typing import List, Dict, Any, Set, Optional, Tuple, Union, Iterator
+from typing import List, Dict, Any, Set, Tuple, Iterator
 import pandas as pd
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, pandas_udf

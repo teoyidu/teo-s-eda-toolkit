@@ -5,11 +5,9 @@ with Turkish language support
 """
 
 import logging
-from typing import List, Dict, Any, Set, Tuple
+from typing import List, Dict, Any, Set
 import pandas as pd
-import numpy as np
 from datasketch import MinHash, MinHashLSH
-from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 import nltk

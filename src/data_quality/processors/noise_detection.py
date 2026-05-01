@@ -4,10 +4,9 @@ Processor for detecting and handling noise in text data, particularly from OCR s
 """
 
 import logging
-from typing import List, Dict, Any
+from typing import Dict, Any
 import pandas as pd
 import re
-from collections import Counter
 
 logger = logging.getLogger(__name__)
 

@@ -13,7 +13,6 @@ from pyspark.sql import SparkSession, DataFrame
 import pandas as pd
 
 from ..exceptions import ConfigurationError, ProcessingError, ValidationError, ModelLoadError, InferenceError
-from ..processors import get_processor
 from ..processors.xlsx_processor import XLSXProcessor
 from .pipeline import PipelineBuilder
 from ..utils.metrics import MetricsCollector

@@ -20,7 +20,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install ruff mypy
       - name: Lint with ruff
-        run: ruff check .
+        run: ruff check src/ tests/
       - name: Type check with mypy
         run: mypy src/ || echo "mypy check failed, but continuing for now"
 

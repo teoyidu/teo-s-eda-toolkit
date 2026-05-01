@@ -4,10 +4,10 @@ Processor for cleaning HTML tags from text data
 """
 
 import logging
-from typing import List, Dict, Any, Set, Optional, Union, cast, Tuple
+from typing import Dict, Any, Tuple
 import pandas as pd
 from bs4 import BeautifulSoup
-from bs4.element import Tag, NavigableString
+from bs4.element import Tag
 import re
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, pandas_udf

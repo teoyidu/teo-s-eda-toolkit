@@ -11,7 +11,6 @@ import os
 import sys
 from datetime import datetime, timedelta
 import random
-from typing import List, Dict, Any
 
 # Add the src directory to the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))

@@ -77,6 +77,31 @@ warn_unreachable = true
 module = ["transformers.*", "torch.*"]
 ignore_missing_imports = true
 
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [
+    "legacy/",
+    ".venv/",
+    "build/",
+    "site/",
+    "__pycache__/",
+    "*.egg-info/",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E402",  # module-level import not at top (common with optional try/except imports)
+    "E701",  # multiple statements on one line (colon)
+    "E712",  # equality comparison to True/False (valid in pandas contexts)
+    "E741",  # ambiguous variable name (l, O, I)
+    "F841",  # local variable assigned but never used
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["E712", "F841"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--cov=src/data_quality/processors --cov-report=term-missing"

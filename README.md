@@ -4,6 +4,7 @@
 [![Spark Version](https://img.shields.io/badge/spark-3.4%2B-orange)](https://spark.apache.org/downloads.html)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Tests](https://github.com/teo/teo-s-eda-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/teo/teo-s-eda-toolkit/actions)
+[![PyPI version](https://badge.fury.io/py/teo-eda-toolkit.svg)](https://badge.fury.io/py/teo-eda-toolkit)
 
 A comprehensive, production-ready data quality framework for processing Parquet files using Apache Spark, with specialized support for Turkish NLP and Legal domain filtering.
 

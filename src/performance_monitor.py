@@ -4,11 +4,9 @@ Performance monitoring and visualization for the Data Quality Framework
 
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from datetime import datetime
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 from dataclasses import dataclass
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots

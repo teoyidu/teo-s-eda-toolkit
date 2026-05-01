@@ -6,10 +6,8 @@ Test BGE-M3 Turkish detector with parquet files
 import sys
 import os
 import pandas as pd
-import numpy as np
 import time
 import json
-from typing import List, Dict, Any
 import logging
 
 # Add the project root to the path
@@ -168,7 +166,7 @@ def test_bge_m3_with_parquet():
                 detector = BGEM3TurkishDetector(config_info['config'])
                 
                 # INSPECT PREPROCESSING: Show before/after preprocessing
-                print(f"Sample of original texts:")
+                print("Sample of original texts:")
                 for i in range(min(2, len(test_df))):
                     original_text = test_df.iloc[i][text_column]
                     print(f"  {i+1}. Original: {original_text[:100]}...")
@@ -186,7 +184,7 @@ def test_bge_m3_with_parquet():
                 
                 # Display results
                 print(f"✅ {config_info['name']} completed in {processing_time:.2f} seconds")
-                print(f"📊 Statistics:")
+                print("📊 Statistics:")
                 for key, value in stats.items():
                     print(f"  {key}: {value}")
                 
@@ -196,7 +194,7 @@ def test_bge_m3_with_parquet():
                     unique_count = len(result_df) - duplicate_count
                     duplicate_rate = (duplicate_count / len(result_df) * 100)
                     
-                    print(f"\n🔍 Duplicate Detection Results:")
+                    print("\n🔍 Duplicate Detection Results:")
                     print(f"  Total texts: {len(result_df)}")
                     print(f"  Duplicates found: {duplicate_count}")
                     print(f"  Unique texts: {unique_count}")
@@ -211,7 +209,7 @@ def test_bge_m3_with_parquet():
                     
                     # Show some duplicate examples
                     if duplicate_count > 0:
-                        print(f"\n📝 Sample Duplicates:")
+                        print("\n📝 Sample Duplicates:")
                         duplicates = result_df[result_df['is_duplicate'] == True]
                         for i, (idx, row) in enumerate(duplicates.head(3).iterrows()):
                             text_preview = row[text_column][:100] + "..." if len(row[text_column]) > 100 else row[text_column]
@@ -226,7 +224,7 @@ def test_bge_m3_with_parquet():
             result_df = best_result
             print(f"\n🎯 Using best configuration: {best_config['name']} (duplicate rate: {best_duplicate_rate:.2f}%)")
         else:
-            print(f"\n⚠️  No optimal configuration found, using last successful result")
+            print("\n⚠️  No optimal configuration found, using last successful result")
         
         # Save the modified parquet file
         output_file = "test_data_1_bge_m3_processed.parquet"
@@ -247,7 +245,7 @@ def test_bge_m3_with_parquet():
         original_size = os.path.getsize(parquet_file) / (1024 * 1024)  # MB
         processed_size = os.path.getsize(output_file) / (1024 * 1024)  # MB
         
-        print(f"\n💾 File Size Comparison:")
+        print("\n💾 File Size Comparison:")
         print(f"  Original: {original_size:.2f} MB")
         print(f"  Processed: {processed_size:.2f} MB")
         print(f"  Size difference: {processed_size - original_size:.2f} MB")
@@ -367,7 +365,7 @@ def analyze_duplicate_patterns():
         duplicates = df[df['is_duplicate'] == True]
         unique_texts = df[df['is_duplicate'] == False]
         
-        print(f"📊 Duplicate Analysis:")
+        print("📊 Duplicate Analysis:")
         print(f"  Total texts: {len(df)}")
         print(f"  Duplicates: {len(duplicates)}")
         print(f"  Unique texts: {len(unique_texts)}")
@@ -383,14 +381,14 @@ def analyze_duplicate_patterns():
         duplicates['text_length'] = duplicates[text_col].str.len()
         unique_texts['text_length'] = unique_texts[text_col].str.len()
         
-        print(f"\n📏 Text Length Analysis:")
+        print("\n📏 Text Length Analysis:")
         print(f"  Average length (all): {df['text_length'].mean():.0f} characters")
         print(f"  Average length (duplicates): {duplicates['text_length'].mean():.0f} characters")
         print(f"  Average length (unique): {unique_texts['text_length'].mean():.0f} characters")
         
         # Analyze quality patterns
         if 'quality_category' in df.columns:
-            print(f"\n🏆 Quality Analysis:")
+            print("\n🏆 Quality Analysis:")
             quality_dist = df['quality_category'].value_counts()
             print(f"  Quality distribution (all):\n{quality_dist}")
             
@@ -399,7 +397,7 @@ def analyze_duplicate_patterns():
         
         # Show some example duplicates
         if len(duplicates) > 0:
-            print(f"\n📝 Example Duplicates:")
+            print("\n📝 Example Duplicates:")
             for i, (idx, row) in enumerate(duplicates.head(5).iterrows()):
                 text_preview = row[text_col][:150] + "..." if len(row[text_col]) > 150 else row[text_col]
                 print(f"  {i+1}. Row {idx} (Length: {row['text_length']}):")

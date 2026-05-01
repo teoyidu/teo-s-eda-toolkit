@@ -7,8 +7,7 @@ import pandas as pd
 import sys
 import os
 import time
-import json
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 # Add the project root to the path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -35,11 +34,11 @@ def analyze_test_data(df: pd.DataFrame) -> Dict[str, Any]:
         'sample_texts': df['text'].head(5).tolist()
     }
     
-    print(f"\n📊 Test Data Analysis:")
+    print("\n📊 Test Data Analysis:")
     print(f"  Total texts: {analysis['total_texts']}")
     print(f"  Categories: {analysis['categories']}")
     print(f"  Expected duplicates distribution: {analysis['expected_duplicates']}")
-    print(f"  Sample texts:")
+    print("  Sample texts:")
     for i, text in enumerate(analysis['sample_texts']):
         print(f"    {i}: {text[:50]}...")
     
@@ -237,14 +236,14 @@ def run_comprehensive_test():
         
         if comparison['speed_comparison']:
             speed = comparison['speed_comparison']
-            print(f"Speed Comparison:")
+            print("Speed Comparison:")
             print(f"  SemHash time: {speed['semhash_time']:.2f}s")
             print(f"  Traditional time: {speed['traditional_time']:.2f}s")
             print(f"  Speed improvement: {speed['speed_improvement']:.2f}x")
         
         if comparison['duplicate_comparison']:
             dupes = comparison['duplicate_comparison']
-            print(f"Duplicate Detection Comparison:")
+            print("Duplicate Detection Comparison:")
             print(f"  SemHash duplicates: {dupes['semhash_duplicates']}")
             print(f"  Traditional duplicates: {dupes['traditional_duplicates']}")
             print(f"  Difference: {dupes['difference']}")

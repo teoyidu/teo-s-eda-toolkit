@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from src.data_quality.processors.numerical_formats import NumericalFormatsProcessor
 
 def test_no_columns_configured(sample_df):

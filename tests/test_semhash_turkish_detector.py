@@ -6,10 +6,8 @@ Comprehensive test suite for SemHash Turkish duplicate detector
 import sys
 import os
 import pandas as pd
-import numpy as np
 import time
 import json
-from typing import List, Dict, Any
 
 # Add the project root to the path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
