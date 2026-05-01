@@ -1,0 +1,31 @@
+site_name: Teo's EDA Toolkit
+site_description: A PySpark-based data quality framework with legal domain filtering
+site_author: Teo
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - toc.integrate
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+
+nav:
+  - Home: index.md
+  - API Reference: api.md
+  - Roadmap: roadmap.md
+  - Contributing: contributing.md
