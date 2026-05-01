@@ -414,10 +414,10 @@ The Turkish NLP features are the most unique part of this toolkit, but have issu
 - [x] Fix UDF serialization in `LegalDomainFilter`
 
 ### Phase 4: Polish & Distribute (1-2 weeks)
-- [ ] Rewrite README to match reality
-- [ ] Set up MkDocs with API documentation
-- [ ] Add `CONTRIBUTING.md` and `CHANGELOG.md`
-- [ ] Implement dependency extras (spark, nlp, turkish, viz, dev)
+- [x] Rewrite README to match reality
+- [x] Set up MkDocs with API documentation
+- [x] Add `CONTRIBUTING.md` and `CHANGELOG.md`
+- [x] Implement dependency extras (spark, nlp, turkish, viz, dev)
 - [ ] First PyPI release
 - [ ] Add real CI badges
 
