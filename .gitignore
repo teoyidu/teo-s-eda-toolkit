@@ -91,3 +91,7 @@ model_cache/
 
 
 /site
+# Rust build artifacts
+/rust/target/
+/rust_extensions/*/target/
+Cargo.lock

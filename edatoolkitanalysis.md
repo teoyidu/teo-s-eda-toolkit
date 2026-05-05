@@ -422,7 +422,7 @@ The Turkish NLP features are the most unique part of this toolkit, but have issu
 - [x] Add real CI badges
 
 ### Phase 5: Performance (2-4 weeks)
-- [ ] Build Rust extension for regex-based boilerplate cleaning
+- [x] Build Rust extension for regex-based boilerplate cleaning
 - [ ] Build Rust extension for TF-IDF cosine similarity
 - [ ] Add benchmark suite (`pytest-benchmark`)
 - [ ] Profile and optimize `.count()` usage

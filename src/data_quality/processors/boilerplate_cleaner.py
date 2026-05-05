@@ -10,6 +10,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, pandas_udf
 from pyspark.sql.types import StringType
 import re
+from . import rust_regex_engine
 from difflib import SequenceMatcher
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -40,6 +41,13 @@ try:
     SEMHASH_AVAILABLE = True
 except ImportError:
     SEMHASH_AVAILABLE = False
+
+# Rust extension for TF-IDF
+try:
+    from data_quality.rust_ext import find_duplicate_indices_tfidf
+    RUST_TFIDF_AVAILABLE = True
+except ImportError:
+    RUST_TFIDF_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -423,30 +431,24 @@ class TurkishBoilerplateCleanerProcessor(BaseProcessor):
                     logger.info(f"DEBUG: Original text (first 200 chars): {text[:200]}...")
                 
                 cleaned_text = text
-                
-                # Remove Turkish legal boilerplate patterns if enabled
-                if self.use_legal_patterns:
-                    len_before = len(cleaned_text)
-                    for pattern in self.turkish_legal_patterns:
-                        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
-                    if self.debug_mode and len_before != len(cleaned_text):
-                        logger.info(f"DEBUG: Turkish legal patterns removed {len_before - len(cleaned_text)} characters")
-                
-                # Remove common boilerplate patterns
+
+                # ── Rust-accelerated regex cleaning ──────────────────────
+                # Delegates to boilerplate_cleaner_rs (PyO3 + Rayon) when
+                # the compiled extension is present; falls back to pure
+                # Python regexes transparently via rust_regex_engine.
                 len_before = len(cleaned_text)
-                for pattern in self.common_patterns:
-                    cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
+                cleaned_text = rust_regex_engine.clean_text(
+                    cleaned_text,
+                    use_legal_patterns=self.use_legal_patterns,
+                    use_common_patterns=True,
+                    custom_patterns=settings.get('custom_patterns'),
+                )
                 if self.debug_mode and len_before != len(cleaned_text):
-                    logger.info(f"DEBUG: Common patterns removed {len_before - len(cleaned_text)} characters")
-                
-                # Remove custom boilerplate patterns if specified
-                if 'custom_patterns' in settings:
-                    custom_patterns = settings['custom_patterns']
-                    len_before = len(cleaned_text)
-                    for pattern in custom_patterns:
-                        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
-                    if self.debug_mode and len_before != len(cleaned_text):
-                        logger.info(f"DEBUG: Custom patterns removed {len_before - len(cleaned_text)} characters")
+                    backend = "Rust" if rust_regex_engine.RUST_AVAILABLE else "Python"
+                    logger.info(
+                        f"DEBUG: [{backend}] Regex engine removed "
+                        f"{len_before - len(cleaned_text)} characters"
+                    )
                 
                 # Remove duplicate content using Turkish-aware methods
                 if settings.get('remove_duplicates', False):
@@ -604,25 +606,31 @@ class TurkishBoilerplateCleanerProcessor(BaseProcessor):
     def _remove_duplicates_with_tfidf(self, lines: List[str], settings: Dict) -> str:
         """Remove duplicates using TF-IDF with Turkish stop words"""
         try:
-            if self.tfidf_vectorizer is None:
-                logger.warning("TF-IDF vectorizer not available, using simple duplicate removal")
-                return self._remove_duplicates_simple(lines, settings)
-                
             # Preprocess lines
             processed_lines = [self._preprocess_turkish_text(line) for line in lines]
             
-            # Create TF-IDF matrix
-            tfidf_matrix = self.tfidf_vectorizer.fit_transform(processed_lines)
+            threshold = settings.get('similarity_threshold', self.similarity_threshold)
             
-            # Calculate cosine similarity
-            similarity_matrix = cosine_similarity(tfidf_matrix)
-            
-            # Find duplicates
-            duplicates = set()
-            for i in range(len(lines)):
-                for j in range(i + 1, len(lines)):
-                    if similarity_matrix[i, j] > settings.get('similarity_threshold', self.similarity_threshold):
-                        duplicates.add(j)
+            # Try Rust extension first for performance (5-10x faster)
+            if RUST_TFIDF_AVAILABLE:
+                duplicates = set(find_duplicate_indices_tfidf(processed_lines, threshold))
+            else:
+                if self.tfidf_vectorizer is None:
+                    logger.warning("TF-IDF vectorizer not available, using simple duplicate removal")
+                    return self._remove_duplicates_simple(lines, settings)
+                    
+                # Create TF-IDF matrix
+                tfidf_matrix = self.tfidf_vectorizer.fit_transform(processed_lines)
+                
+                # Calculate cosine similarity
+                similarity_matrix = cosine_similarity(tfidf_matrix)
+                
+                # Find duplicates
+                duplicates = set()
+                for i in range(len(lines)):
+                    for j in range(i + 1, len(lines)):
+                        if similarity_matrix[i, j] > threshold:
+                            duplicates.add(j)
             
             # Remove duplicates
             unique_lines = [line for i, line in enumerate(lines) if i not in duplicates]
