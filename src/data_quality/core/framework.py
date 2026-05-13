@@ -190,12 +190,14 @@ class DataQualityFramework:
                 
                 # Apply all data quality checks
                 cleaned_df, validation_stats = self._apply_data_quality_pipeline(df, path)
-                
-                # Save cleaned data with checkpoint
-                output_path = self._save_with_checkpoint(cleaned_df, path, i)
-                
+
+                # Materialise the cleaned row count once (used for both
+                # partition sizing inside _save_with_checkpoint and for stats).
                 cleaned_count = cleaned_df.count()
-                
+
+                # Save cleaned data with checkpoint
+                output_path = self._save_with_checkpoint(cleaned_df, path, i, cleaned_count)
+
                 # Update results
                 results['processed_files'].append({
                     'path': path,
@@ -204,10 +206,10 @@ class DataQualityFramework:
                     'cleaned_count': cleaned_count,
                     'validation_stats': validation_stats
                 })
-                
+
                 results['total_records_processed'] += original_count
                 results['total_records_cleaned'] += cleaned_count
-                
+
                 logger.info(f"Successfully processed {path}: {original_count} -> {cleaned_count} records")
                 
             except Exception as e:
@@ -229,8 +231,9 @@ class DataQualityFramework:
         try:
             df = self.spark.read.parquet(path)
             
-            # Basic validation
-            if df.count() == 0:
+            # Use head(1) instead of count() to avoid a full scan just to
+            # detect empty files — significantly cheaper on large datasets.
+            if not df.head(1):
                 logger.warning(f"Empty parquet file: {path}")
                 return None
                 
@@ -265,8 +268,21 @@ class DataQualityFramework:
             if df.is_cached:
                 df.unpersist()
     
-    def _save_with_checkpoint(self, df: DataFrame, original_path: str, batch_index: int) -> str:
-        """Save DataFrame with checkpoint and partitioning"""
+    def _save_with_checkpoint(
+        self,
+        df: DataFrame,
+        original_path: str,
+        batch_index: int,
+        row_count: int,
+    ) -> str:
+        """Save DataFrame with checkpoint and partitioning.
+
+        Parameters
+        ----------
+        row_count:
+            Pre-computed row count for the DataFrame.  Passed in so this
+            method never has to trigger its own ``df.count()`` Spark action.
+        """
         try:
             # Generate output path
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -276,8 +292,8 @@ class DataQualityFramework:
             # Create checkpoint path
             checkpoint_path = f"{self.checkpoint_dir}/checkpoint_{filename}_{timestamp}_batch_{batch_index}"
             
-            # Calculate optimal number of partitions
-            num_partitions = max(1, df.count() // self.batch_size)
+            # Reuse the pre-computed row count to avoid a redundant Spark action.
+            num_partitions = max(1, row_count // self.batch_size)
             
             # Repartition if needed
             if num_partitions > 1:

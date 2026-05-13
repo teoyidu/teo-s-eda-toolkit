@@ -42,12 +42,10 @@ try:
 except ImportError:
     SEMHASH_AVAILABLE = False
 
-# Rust extension for TF-IDF
-try:
-    from data_quality.rust_ext import find_duplicate_indices_tfidf
-    RUST_TFIDF_AVAILABLE = True
-except ImportError:
-    RUST_TFIDF_AVAILABLE = False
+# Rust-accelerated TF-IDF (transparent fallback to scikit-learn via the shim)
+from . import rust_tfidf_engine as _tfidf_engine
+find_duplicate_indices_tfidf = _tfidf_engine.find_duplicate_indices_tfidf
+RUST_TFIDF_AVAILABLE = _tfidf_engine.RUST_TFIDF_AVAILABLE
 
 logger = logging.getLogger(__name__)
 

@@ -134,10 +134,16 @@ class LegalDomainFilter:
         df = df.withColumn("legal_probability", col("legal_domain_struct.legal_probability"))
         df = df.drop("legal_domain_struct")
         
-        # We'll calculate the stats by just executing the plan natively
-        total_count = df.count()
-        legal_count = df.filter(col("is_legal_domain")).count()
-        
+        # Compute total and legal-domain counts in a single Spark action
+        # instead of two separate .count() calls (halves the number of jobs).
+        from pyspark.sql.functions import count as spark_count, when as spark_when, lit
+        count_row = df.agg(
+            spark_count(lit(1)).alias("total"),
+            spark_count(spark_when(col("is_legal_domain"), lit(1))).alias("legal"),
+        ).collect()[0]
+        total_count = count_row["total"]
+        legal_count = count_row["legal"]
+
         stats = {
             "total_documents": total_count,
             "legal_documents": legal_count,

@@ -75,8 +75,12 @@ class MissingValuesProcessor(BaseProcessor):
                     df_cleaned = df.dropna(subset=self.critical_columns)
                 else:
                     df_cleaned = df.dropna()
-                
-                stats['rows_dropped'] = total_rows - df_cleaned.count()
+
+                # Derive dropped count from the single agg scan already done
+                # rather than calling df.count() again on the original.
+                # df_cleaned.count() is unavoidable here since dropna is lazy.
+                cleaned_rows = df_cleaned.count()
+                stats['rows_dropped'] = total_rows - cleaned_rows
             elif self.missing_value_strategy == 'fill':
                 # Fill missing values with defaults
                 df_cleaned = df.fillna(self.fill_values)

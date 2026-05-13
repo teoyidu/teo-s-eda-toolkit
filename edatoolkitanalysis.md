@@ -423,10 +423,10 @@ The Turkish NLP features are the most unique part of this toolkit, but have issu
 
 ### Phase 5: Performance (2-4 weeks)
 - [x] Build Rust extension for regex-based boilerplate cleaning
-- [ ] Build Rust extension for TF-IDF cosine similarity
-- [ ] Add benchmark suite (`pytest-benchmark`)
-- [ ] Profile and optimize `.count()` usage
-- [ ] Add memory profiling tests
+- [x] Build Rust extension for TF-IDF cosine similarity
+- [x] Add benchmark suite (`pytest-benchmark`)
+- [x] Profile and optimize `.count()` usage
+- [x] Add memory profiling tests
 
 ---
 
