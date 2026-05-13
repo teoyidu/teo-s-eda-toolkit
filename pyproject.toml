@@ -41,7 +41,8 @@ nlp = ["torch>=2.0.0", "transformers>=4.30.0", "sentencepiece>=0.1.99"]
 turkish = ["FlagEmbedding>=1.2.0", "semhash>=0.3.0", "nltk>=3.8.1"]
 viz = ["matplotlib>=3.5.3", "seaborn>=0.12.2", "plotly>=5.13.0"]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "pytest-mock>=3.10.0", "pytest-benchmark>=4.0", "black>=22.0", "ruff>=0.4", "mypy>=1.0", "flake8>=6.0.0"]
-all = ["teo-eda-toolkit[spark,nlp,turkish,viz]"]
+docs = ["mkdocs-material>=9.0.0", "mkdocstrings[python]>=0.20.0"]
+all = ["teo-eda-toolkit[spark,nlp,turkish,viz,docs]"]
 
 [project.scripts]
 data-quality = "data_quality.__main__:main"
